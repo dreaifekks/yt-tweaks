@@ -2,8 +2,8 @@
 
 A small Chrome extension that changes three things on youtube.com.
 
-- **Videos per row follow the window width.** Two from 768 px, one more for every 256 px, up to a most you choose (5 to start with). The cards stretch to fill the row. This applies to the home page and the other pages laid out the same way, such as subscriptions and channel pages.
-- **Only videos among the videos.** The home feed and the list beside a video lose their Shorts, games, mixes, playlists and albums, and the home feed loses the other shelves it puts between videos, such as breaking news. Each of the four groups has its own switch.
+- **Videos per row follow the window width.** As many as fit with every card at least a width you choose (290 px to start with), up to a most you choose (5 to start with). The cards stretch to fill the row. This applies to the home page and the other pages laid out the same way, such as subscriptions and channel pages.
+- **Only videos among the videos.** The home feed and the list beside a video lose their Shorts, games (the "play while you watch" row included), mixes, playlists and albums, and the home feed loses the other shelves it puts between videos, such as breaking news. Each of the four groups has its own switch.
 - **Playback speed at hand.** A button in the player's control bar shows the speed. Turn the wheel over it for faster or slower, click it to switch between 1× and the last other speed. Ctrl + wheel anywhere over the video does the same, and so do the `]` and `[` keys. The step and the lowest and highest speed are settings.
 
 The settings are behind the toolbar icon. A change applies to open YouTube tabs at once, without a reload.

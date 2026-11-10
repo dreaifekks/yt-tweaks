@@ -1,12 +1,13 @@
-// Videos per row by window width, on the home page and the other grids built the same way
-// (subscriptions, channel pages): two from 768 px, one more every 256 px, up to the chosen
+// Videos per row, on the home page and the other grids built the same way (subscriptions,
+// channel pages): as many as fit with every card at least the chosen width, up to the chosen
 // most. The cards stretch to fill the row. YouTube's own count comes from a minimum card
 // width the server sends (360 px as of 2026-11), which leaves most windows with three large
 // cards per row.
 // Runs in YouTube's own world, where the grid's code is.
 (() => {
+  const GAP = 16; // the space YouTube puts between cards
   const html = document.documentElement;
-  const columns = () => Math.min(Number(html.dataset.yttMaxColumns), Math.max(1, Math.floor(innerWidth / 256) - 1));
+  const columns = (width) => Math.min(Number(html.dataset.yttMaxColumns), Math.max(1, Math.floor((width + GAP) / (Number(html.dataset.yttCardWidth) + GAP))));
 
   customElements.whenDefined("ytd-rich-grid-renderer").then(() => {
     const proto = Object.getPrototypeOf(document.createElement("ytd-rich-grid-renderer").polymerController);
@@ -19,8 +20,11 @@
     // YouTube stored last time, so nothing is laid out again unless something changed, and
     // from the assignment on it reads as our count, which is what gets laid out.
     proto.refreshGridLayout = function (force, ...rest) {
-      const perRow = columns();
-      if (!perRow) return refresh.call(this, force, ...rest); // the settings haven't arrived
+      // The width the cards share: the grid's, less its side margins.
+      const width = this.adjustRichGridWidth(this.hostElement.clientWidth, true);
+      const perRow = columns(width);
+      // A grid on a page that isn't showing has no width; and the settings may not have arrived.
+      if (!(width > 0) || !perRow) return refresh.call(this, force, ...rest);
       const changed = this.elementsPerRow !== perRow;
       let stored = false;
       Object.defineProperty(this, "elementsPerRow", {
@@ -37,12 +41,12 @@
       return result || changed;
     };
 
-    // A new most from the popup, or the settings arriving after the grid: lay out again.
+    // A new width or most from the popup, or the settings arriving after the grid: lay out again.
     new MutationObserver(() => {
       for (const el of document.querySelectorAll("ytd-rich-grid-renderer")) {
         const grid = el.polymerController;
         if (grid.refreshGridLayout()) grid.updateRichItemGridPositions();
       }
-    }).observe(html, { attributeFilter: ["data-ytt-max-columns"] });
+    }).observe(html, { attributeFilter: ["data-ytt-card-width", "data-ytt-max-columns"] });
   });
 })();

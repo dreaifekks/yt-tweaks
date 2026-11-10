@@ -105,8 +105,13 @@ const grid = () =>
       card ||= Math.round(box.width);
     }
     const counts = [...rows.values()];
+    const g = el.polymerController;
+    const width = g.adjustRichGridWidth(el.clientWidth, true);
+    const { yttCardWidth, yttMaxColumns } = document.documentElement.dataset;
     return {
       window: innerWidth,
+      least: Number(yttCardWidth),
+      expected: Math.min(Number(yttMaxColumns), Math.max(1, Math.floor((width + 16) / (Number(yttCardWidth) + 16)))),
       perRow: Number(getComputedStyle(el).getPropertyValue("--ytd-rich-grid-items-per-row")),
       rows: [...new Set(counts.slice(0, -1))], // the last row may be part full
       card,
@@ -114,15 +119,18 @@ const grid = () =>
     };
   }, HOME);
 // Full rows of the expected count, no gaps where something was taken out, cards across the width.
-const gridOk = (s, expected) => s.perRow === expected && s.rows.length === 1 && s.rows[0] === expected && s.filled > 95;
+const gridOk = (s) => s.perRow === s.expected && s.rows.length === 1 && s.rows[0] === s.expected && s.filled > 95 && (s.card >= s.least || s.expected === 1);
 
-for (const [width, expected] of [[800, 2], [1100, 3], [1300, 4], [1662, 5], [1920, 5], [2560, 5]]) {
+const counts = [];
+for (const width of [800, 1100, 1300, 1662, 1920, 2560]) {
   await page.setViewportSize({ width, height: 900 });
   await page.waitForTimeout(1500);
   const s = await grid();
   await page.screenshot({ path: path.join(shots, `home-${width}.png`) });
-  check(`home at ${width} px: ${expected} per row, every row full`, gridOk(s, expected), s);
+  counts.push(s.perRow);
+  check(`home at ${width} px: ${s.expected} per row, cards at least ${s.least} px, every row full`, gridOk(s), s);
 }
+check("the count goes from 2 up to the most of 5 as the window widens", counts[0] === 2 && counts.at(-1) === 5 && counts.every((n, i) => !i || n >= counts[i - 1]), counts);
 await page.setViewportSize({ width: 1662, height: 900 });
 await page.waitForTimeout(1200);
 
@@ -132,16 +140,16 @@ check("the home feed shows only videos", onlyVideos(feed), feed);
 check("and it had Shorts, a shelf or mixes to take out", Object.entries(feed).some(([kind, c]) => kind !== "video" && c.hidden > 0), feed);
 
 // ---- settings change from the popup, no reload -----------------------------------------
-await popup.selectOption("#maxColumns", "4");
+await popup.selectOption("#maxColumns", "3");
 await popup.uncheck("#hideShorts");
 await popup.uncheck("#hideLists");
 await page.bringToFront();
 await page.waitForTimeout(1200);
 const fewer = await page.evaluate((sel) => Number(getComputedStyle(document.querySelector(sel).parentElement).getPropertyValue("--ytd-rich-grid-items-per-row")), HOME);
-check("a lower most from the popup reflows the open page", fewer === 4, fewer);
+check("a lower most from the popup reflows the open page", fewer === 3, fewer);
 feed = await census(HOME);
 check("switches turned off in the popup bring those entries back at once", !feed.shorts?.hidden && !feed.list?.hidden && !feed.shelf?.shown, feed);
-await page.screenshot({ path: path.join(shots, "home-1662-unfiltered-4.png") });
+await page.screenshot({ path: path.join(shots, "home-1662-unfiltered-3.png") });
 await popup.selectOption("#maxColumns", "5");
 await popup.check("#hideShorts");
 await popup.check("#hideLists");
@@ -251,7 +259,7 @@ await page.locator("ytd-masthead a#logo").first().click();
 await page.waitForURL("https://www.youtube.com/");
 await page.waitForTimeout(3000);
 const again = await grid();
-check("back on the home page: still 5 per row, every row full", gridOk(again, 5), again);
+check("back on the home page: the rows are as before", gridOk(again), again);
 feed = await census(HOME);
 check("and still only videos", onlyVideos(feed), feed);
 await page.screenshot({ path: path.join(shots, "home-again.png") });

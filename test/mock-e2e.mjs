@@ -27,7 +27,7 @@ ytd-rich-grid-renderer{display:block}
 #contents{display:flex;flex-wrap:wrap}
 ytd-rich-item-renderer{display:block;height:40px;width:calc(100%/var(--ytd-rich-grid-items-per-row))}
 ytd-rich-section-renderer{display:flex;width:100%;height:40px}
-yt-lockup-view-model,ytd-reel-shelf-renderer,ytd-compact-radio-renderer{display:block;height:20px}
+yt-lockup-view-model,ytd-reel-shelf-renderer,ytd-compact-radio-renderer,ytd-horizontal-card-list-renderer{display:block;height:20px}
 #movie_player{position:relative;width:800px;height:450px;background:#222}
 .ytp-right-controls-left{display:flex;position:absolute;right:0;bottom:0;height:40px}
 .ytp-button{height:40px}
@@ -48,6 +48,7 @@ ${[8, 9, 10, 11, 12].map(video).join("")}
 <ytd-browse page-subtype="subscriptions"><ytd-rich-item-renderer class="elsewhere"><a href="/watch?v=e1&list=PL2">a playlist on another page</a></ytd-rich-item-renderer></ytd-browse>
 <ytd-watch-next-secondary-results-renderer><ytd-item-section-renderer><div id="contents">
 ${lockup("video", "/watch?v=r1")}${lockup("mix", "/watch?v=r2&list=RDr2&start_radio=1")}${lockup("playlist", "/playlist?list=PL3")}${lockup("short", "/shorts/s4")}${lockup("game", "/playables/g2")}
+<ytd-horizontal-card-list-renderer class="game"><a href="/playables">play while you watch</a><a href="/playables/g3">game</a></ytd-horizontal-card-list-renderer>
 <ytd-reel-shelf-renderer class="shorts-shelf"></ytd-reel-shelf-renderer><ytd-compact-radio-renderer class="mix"></ytd-compact-radio-renderer>
 ${lockup("video", "/watch?v=r3")}
 </div></ytd-item-section-renderer></ytd-watch-next-secondary-results-renderer>
@@ -66,6 +67,7 @@ class Grid {
     this.hostElement.style.setProperty("--ytd-rich-grid-items-per-row", this.elementsPerRow);
     return changed;
   }
+  adjustRichGridWidth(width) { return width > 600 ? width - 32 : width; } // side margins
   updateRichItemGridPositions() { this.positions++; }
 }
 customElements.define("ytd-rich-grid-renderer", class extends HTMLElement {
@@ -116,7 +118,8 @@ const grid = () =>
     const g = el.polymerController;
     return { perRow: Number(el.style.getPropertyValue("--ytd-rich-grid-items-per-row")), property: g.elementsPerRow, own: Object.hasOwn(g, "elementsPerRow"), layouts: g.layouts, positions: g.positions };
   });
-for (const [width, expected] of [[700, 1], [800, 2], [1023, 2], [1024, 3], [1300, 4], [1536, 5], [2560, 5]]) {
+// Cards at least 290 px with 16 px between them, in the width less 32 px of margins.
+for (const [width, expected] of [[580, 1], [628, 2], [933, 2], [934, 3], [1300, 4], [1600, 5], [2560, 5]]) {
   await page.setViewportSize({ width, height: 900 });
   await page.waitForTimeout(150);
   const s = await grid();
@@ -131,7 +134,14 @@ check("a resize that changes no count doesn't lay out again", after.layouts === 
 await popup.selectOption("#maxColumns", "8");
 await page.waitForTimeout(200);
 let s = await grid();
-check("a higher most from the popup: 8 per row on a wide window, laid out and positioned again", s.perRow === 8 && s.layouts === after.layouts + 1 && s.positions === after.positions + 1, s);
+check("a higher most from the popup: 8 per row at 2500 px, laid out and positioned again", s.perRow === 8 && s.layouts === after.layouts + 1 && s.positions === after.positions + 1, s);
+await popup.fill("#cardWidth", "400");
+await popup.locator("#cardWidth").blur();
+await page.waitForTimeout(200);
+s = await grid();
+check("wider cards from the popup: 5 per row", s.perRow === 5, s);
+await popup.fill("#cardWidth", "290");
+await popup.locator("#cardWidth").blur();
 await popup.selectOption("#maxColumns", "5");
 await page.setViewportSize({ width: 1600, height: 900 });
 await page.waitForTimeout(200);
@@ -219,7 +229,7 @@ check("a speed set elsewhere shows on the button", (await speed()).button === "0
 // ---- the popup shows what is stored ----------------------------------------------------
 await popup.reload();
 const stored = await popup.evaluate(() => Object.fromEntries([...document.querySelectorAll("input, select")].map((el) => [el.id, el.type === "checkbox" ? el.checked : el.value])));
-check("the popup opens with the stored settings", JSON.stringify(stored) === JSON.stringify({ maxColumns: "5", hideShorts: true, hideGames: true, hideLists: true, hideShelves: true, speedStep: "0.5", speedMin: "0.25", speedMax: "1.5" }), stored);
+check("the popup opens with the stored settings", JSON.stringify(stored) === JSON.stringify({ cardWidth: "290", maxColumns: "5", hideShorts: true, hideGames: true, hideLists: true, hideShelves: true, speedStep: "0.5", speedMin: "0.25", speedMax: "1.5" }), stored);
 
 check("no errors on the page", errors.length === 0, errors);
 

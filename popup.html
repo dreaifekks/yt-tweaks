@@ -10,6 +10,7 @@
 
     <section>
       <h2>每行视频数</h2>
+      <label class="row" for="cardWidth"><span>卡片最小宽度（px）</span><input id="cardWidth" type="number" min="200" max="500" step="10" /></label>
       <label class="row" for="maxColumns">
         <span>最多几列</span>
         <select id="maxColumns">
@@ -21,7 +22,7 @@
           <option>8</option>
         </select>
       </label>
-      <small>窗口窄了自动减少：768 px 起 2 列，每宽 256 px 多 1 列，到上限为止。</small>
+      <small>每行放得下几个就放几个，卡片不窄于最小宽度，不超过最多列数。最小宽度越大，窗口变窄时越早减列。</small>
     </section>
 
     <section>

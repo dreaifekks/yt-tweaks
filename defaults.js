@@ -1,6 +1,8 @@
 // The settings and what they start as. Shared by the content scripts and the popup.
 globalThis.YTT_DEFAULTS = {
-  // Most videos a row may hold. Narrower windows get fewer (grid.js).
+  // Videos per row: as many as fit with every card at least this wide, in CSS pixels, and
+  // never more than the most (grid.js).
+  cardWidth: 290,
   maxColumns: 5,
   // What to take out of the home feed and the list beside a video (content.css).
   hideShorts: true,

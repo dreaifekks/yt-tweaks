@@ -11,9 +11,10 @@
 [data-ytt-hide-shorts] ytd-watch-next-secondary-results-renderer ytd-reel-shelf-renderer,
 [data-ytt-hide-shorts] ytd-watch-next-secondary-results-renderer :is(yt-lockup-view-model, ytd-compact-video-renderer):has(a[href^="/shorts/"]),
 
-/* Games (Playables). */
+/* Games (Playables). Beside a video they come as a row of cards, ytd-horizontal-card-list-renderer,
+   titled "play while you watch". */
 [data-ytt-hide-games] ytd-browse[page-subtype="home"] :is(ytd-rich-section-renderer, ytd-rich-item-renderer):has(a[href^="/playables"]),
-[data-ytt-hide-games] ytd-watch-next-secondary-results-renderer :is(yt-lockup-view-model, ytd-rich-shelf-renderer):has(a[href^="/playables"]),
+[data-ytt-hide-games] ytd-watch-next-secondary-results-renderer ytd-item-section-renderer > #contents > :has(a[href^="/playables"]),
 
 /* Mixes, playlists and albums: the only entries whose link carries a list. */
 [data-ytt-hide-lists] ytd-browse[page-subtype="home"] ytd-rich-item-renderer:has(a[href*="list="]),
