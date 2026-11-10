@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>YT Tweaks</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <h1>YT Tweaks</h1>
+
+    <section>
+      <h2>每行视频数</h2>
+      <label class="row" for="maxColumns">
+        <span>最多几列</span>
+        <select id="maxColumns">
+          <option>3</option>
+          <option>4</option>
+          <option>5</option>
+          <option>6</option>
+          <option>7</option>
+          <option>8</option>
+        </select>
+      </label>
+      <small>窗口窄了自动减少：768 px 起 2 列，每宽 256 px 多 1 列，到上限为止。</small>
+    </section>
+
+    <section>
+      <h2>过滤</h2>
+      <label class="check"><input id="hideShorts" type="checkbox" />Shorts</label>
+      <label class="check"><input id="hideGames" type="checkbox" />游戏</label>
+      <label class="check"><input id="hideLists" type="checkbox" />合辑、播放列表、专辑</label>
+      <label class="check"><input id="hideShelves" type="checkbox" />首页插进来的其他栏（重大新闻等）</label>
+      <small>勾选的从首页视频流和播放页右侧列表里去掉。</small>
+    </section>
+
+    <section>
+      <h2>倍速</h2>
+      <label class="row" for="speedStep"><span>每次加减</span><input id="speedStep" type="number" min="0.05" max="1" step="0.05" /></label>
+      <label class="row" for="speedMin"><span>最低</span><input id="speedMin" type="number" min="0.25" max="1" step="0.05" /></label>
+      <label class="row" for="speedMax"><span>最高</span><input id="speedMax" type="number" min="1" max="4" step="0.25" /></label>
+      <small>控制栏上的倍速按钮：滚轮加减，点按在 1× 和上次的倍速间切换。按住 Ctrl 在视频上滚轮也行。键盘 ] 加快、[ 减慢。YouTube 最高给到 2×，Premium 4×。</small>
+    </section>
+
+    <script src="defaults.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

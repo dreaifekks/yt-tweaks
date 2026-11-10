@@ -1,0 +1,58 @@
+/* What's taken out of the home feed and the list beside a video. Each group is behind an
+   attribute settings.js puts on <html>. Checked against YouTube's pages on 2026-11-11.
+
+   Home feed: videos are ytd-rich-item-renderer; a shelf between them is a
+   ytd-rich-section-renderer. Beside a video: entries are yt-lockup-view-model (the
+   ytd-compact-* names are the older markup, still served to some). */
+
+/* Shorts: the shelf, and single Shorts among the videos. */
+[data-ytt-hide-shorts] ytd-browse[page-subtype="home"] ytd-rich-section-renderer:has([is-shorts]),
+[data-ytt-hide-shorts] ytd-browse[page-subtype="home"] ytd-rich-item-renderer:has(a[href^="/shorts/"]),
+[data-ytt-hide-shorts] ytd-watch-next-secondary-results-renderer ytd-reel-shelf-renderer,
+[data-ytt-hide-shorts] ytd-watch-next-secondary-results-renderer :is(yt-lockup-view-model, ytd-compact-video-renderer):has(a[href^="/shorts/"]),
+
+/* Games (Playables). */
+[data-ytt-hide-games] ytd-browse[page-subtype="home"] :is(ytd-rich-section-renderer, ytd-rich-item-renderer):has(a[href^="/playables"]),
+[data-ytt-hide-games] ytd-watch-next-secondary-results-renderer :is(yt-lockup-view-model, ytd-rich-shelf-renderer):has(a[href^="/playables"]),
+
+/* Mixes, playlists and albums: the only entries whose link carries a list. */
+[data-ytt-hide-lists] ytd-browse[page-subtype="home"] ytd-rich-item-renderer:has(a[href*="list="]),
+[data-ytt-hide-lists] ytd-watch-next-secondary-results-renderer :is(yt-lockup-view-model:has(a[href*="list="]), ytd-compact-radio-renderer, ytd-compact-playlist-renderer),
+
+/* Every other shelf in the home feed. One of them may hold a Short among its videos, so
+   the Shorts shelf is told apart by its is-shorts mark, not by its links. */
+[data-ytt-hide-shelves] ytd-browse[page-subtype="home"] ytd-rich-section-renderer:not(:has([is-shorts], a[href^="/playables"])) {
+  display: none !important;
+}
+
+/* The speed button in the player's control bar (speed.js). */
+.ytp-button.ytt-speed {
+  width: auto;
+  min-width: 48px;
+  padding: 0 8px;
+  color: inherit;
+  font: 500 14px / 1 "YouTube Noto", Roboto, Arial, Helvetica, sans-serif;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* The new speed over the video for a moment after it changes. */
+.ytt-toast {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  z-index: 70;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font: 500 20px / 1 "YouTube Noto", Roboto, Arial, Helvetica, sans-serif;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 0.2s;
+}
+
+.ytt-toast.ytt-show {
+  opacity: 1;
+}

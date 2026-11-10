@@ -1,0 +1,15 @@
+{
+  "name": "yt-tweaks",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "package": "node scripts/build.mjs --package",
+    "test": "node test/mock-e2e.mjs",
+    "live": "node test/live.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}
