@@ -5,6 +5,7 @@
 (() => {
   const publish = (values) => {
     for (const [key, value] of Object.entries(values)) {
+      if (key === "blockWords") continue; // filter.js reads the list itself
       const name = `ytt${key[0].toUpperCase()}${key.slice(1)}`;
       if (value === false) delete document.documentElement.dataset[name];
       else document.documentElement.dataset[name] = value === true ? "" : value;

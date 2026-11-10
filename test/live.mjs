@@ -139,6 +139,25 @@ let feed = await census(HOME);
 check("the home feed shows only videos", onlyVideos(feed), feed);
 check("and it had Shorts, a shelf or mixes to take out", Object.entries(feed).some(([kind, c]) => kind !== "video" && c.hidden > 0), feed);
 
+// ---- videos taken off by title -----------------------------------------------------------
+const firstCard = () => page.evaluate((sel) => [...document.querySelectorAll(`${sel} > ytd-rich-item-renderer`)].find((el) => el.offsetParent && el.querySelector("h3"))?.querySelector("h3").textContent.trim(), HOME);
+const title = await firstCard();
+await popup.fill("#blockWords", title.slice(0, 12).toUpperCase());
+await page.bringToFront();
+await page.waitForTimeout(1200);
+check("a word from the first video's title takes it off the home feed", (await firstCard()) !== title, [title, await firstCard()]);
+const channel = await page.evaluate((sel) => [...document.querySelectorAll(`${sel} > ytd-rich-item-renderer`)].find((el) => el.offsetParent && el.querySelector('a[href^="/@"]'))?.querySelector('a[href^="/@"]').textContent.trim(), HOME);
+await popup.fill("#blockWords", `/^${channel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$/`);
+await page.bringToFront();
+await page.waitForTimeout(1200);
+const left = await page.evaluate(([sel, channel]) => [...document.querySelectorAll(`${sel} > ytd-rich-item-renderer`)].filter((el) => el.offsetParent && el.querySelector('a[href^="/@"]')?.textContent.trim() === channel).length, [HOME, channel]);
+check("a regular expression for a channel's name takes its videos off", (await firstCard()) === title && left === 0, { channel, left });
+const full = await grid();
+check("and the rows stay full", gridOk(full), full);
+await popup.fill("#blockWords", "");
+await page.bringToFront();
+await page.waitForTimeout(1200);
+
 // ---- settings change from the popup, no reload -----------------------------------------
 await popup.selectOption("#maxColumns", "3");
 await popup.uncheck("#hideShorts");

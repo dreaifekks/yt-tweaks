@@ -1,0 +1,83 @@
+name: Release
+
+# Pushing a v<version> tag, such as v0.1.0, packages the extension and publishes a GitHub
+# Release. The tag has to match the version in manifest.json.
+# A manual run only packages: the zip is in that run's artifacts and nothing is published.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Check tag
+        if: github.ref_type == 'tag'
+        run: |
+          version="$(node -p "require('./manifest.json').version")"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::The tag $GITHUB_REF_NAME should be v$version, the version in manifest.json"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install Chromium
+        run: npx playwright-core install --with-deps chromium
+
+      - name: Build and zip
+        run: npm run package
+
+      - name: Test the build
+        run: npm test
+        env:
+          EXT_DIR: dist/chrome
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: chrome
+          path: packages/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish release
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: packages
+          merge-multiple: true
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" packages/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" packages/* --verify-tag --generate-notes --latest
+          fi

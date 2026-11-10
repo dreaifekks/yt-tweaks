@@ -9,6 +9,8 @@ globalThis.YTT_DEFAULTS = {
   hideGames: true,
   hideLists: true, // mixes, playlists and albums
   hideShelves: true, // the other shelves the home feed puts between videos, like breaking news
+  // Videos to take off the home feed by title or channel name (filter.js).
+  blockWords: [],
   speedStep: 0.25,
   speedMin: 0.25,
   speedMax: 4,

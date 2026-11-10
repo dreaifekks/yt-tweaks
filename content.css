@@ -26,6 +26,11 @@
   display: none !important;
 }
 
+/* Home videos whose title or channel name is on the list (filter.js). */
+[data-ytt-blocked] {
+  display: none !important;
+}
+
 /* The speed button in the player's control bar (speed.js). */
 .ytp-button.ytt-speed {
   width: auto;

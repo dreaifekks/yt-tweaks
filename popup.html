@@ -32,6 +32,11 @@
       <label class="check"><input id="hideLists" type="checkbox" />合辑、播放列表、专辑</label>
       <label class="check"><input id="hideShelves" type="checkbox" />首页插进来的其他栏（重大新闻等）</label>
       <small>勾选的从首页视频流和播放页右侧列表里去掉。</small>
+      <label class="stack" for="blockWords">
+        <span>首页屏蔽词</span>
+        <textarea id="blockWords" rows="4" spellcheck="false" placeholder="每行一个&#10;/正则也行/"></textarea>
+      </label>
+      <small>标题或频道名里有就从首页去掉，不分大小写。写成 /…/ 的按正则匹配，如 /第\d+集/。</small>
     </section>
 
     <section>

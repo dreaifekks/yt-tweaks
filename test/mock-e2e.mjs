@@ -19,7 +19,7 @@ const id = createHash("sha256").update(ext).digest("hex").slice(0, 32).replace(/
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ytt-e2e-"));
 execFileSync("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", dir + "/k.pem", "-out", dir + "/c.pem", "-days", "1", "-subj", "/CN=www.youtube.com"], { stdio: "ignore" });
 
-const video = (n) => `<ytd-rich-item-renderer class="video"><a href="/watch?v=v${n}">video ${n}</a></ytd-rich-item-renderer>`;
+const video = (n) => `<ytd-rich-item-renderer class="video" id="v${n}"><a href="/watch?v=v${n}">thumbnail</a><h3>Title ${n} of a Video</h3><a href="/@c${n}">Channel ${n}</a></ytd-rich-item-renderer>`;
 const lockup = (cls, href) => `<yt-lockup-view-model class="${cls}"><a href="${href}">${cls}</a></yt-lockup-view-model>`;
 const PAGE = `<!doctype html><html><head><style>
 body{margin:0}
@@ -176,6 +176,25 @@ await popup.uncheck("#hideGames");
 await page.waitForTimeout(150);
 check("games switched off: the games shelf and entry are back", kinds(await shown(HOME)) === "games-shelf,video" && kinds(await shown(BESIDE)) === "game,video", [await shown(HOME), await shown(BESIDE)]);
 await popup.check("#hideGames");
+
+// ---- videos taken off the home feed by title or channel name ---------------------------
+const gone = () => page.evaluate(() => [...document.querySelectorAll('ytd-browse[page-subtype="home"] .video')].filter((el) => getComputedStyle(el).display === "none").map((el) => el.id));
+await popup.fill("#blockWords", "title 3 OF\n\n/^Channel (7|8)$/\n/(/\n  channel 12  ");
+await page.waitForTimeout(800);
+check("plain text in a title or name whatever the case, and regular expressions, take videos out; a broken one is passed over", (await gone()).join() === "v3,v7,v8,v12", await gone());
+await page.evaluate(() => {
+  const grid = document.querySelector('ytd-browse[page-subtype="home"] #contents');
+  grid.insertAdjacentHTML("beforeend", '<ytd-rich-item-renderer class="video" id="late"><a href="/watch?v=late">thumbnail</a></ytd-rich-item-renderer>');
+  setTimeout(() => grid.lastElementChild.insertAdjacentHTML("beforeend", '<h3>Late</h3><a href="/@c7">Channel 7</a>'), 50);
+});
+await page.waitForTimeout(300);
+check("a video the feed adds later, filled in after it's added, goes too", (await gone()).includes("late"), await gone());
+check("a word doesn't reach videos beside the player", (await shown(BESIDE)).join() === "video,video", await shown(BESIDE));
+await popup.reload();
+check("the popup shows the stored words, tidied", (await popup.inputValue("#blockWords")) === "title 3 OF\n/^Channel (7|8)$/\n/(/\nchannel 12", await popup.inputValue("#blockWords"));
+await popup.fill("#blockWords", "");
+await page.waitForTimeout(800);
+check("an emptied list brings them back", (await gone()).length === 0, await gone());
 
 // ---- playback speed --------------------------------------------------------------------
 const speed = () => page.waitForTimeout(50).then(() => page.evaluate(() => ({ rate: document.querySelector("#movie_player video").playbackRate, button: document.querySelector(".ytp-right-controls-left").firstElementChild.textContent, toast: document.querySelector(".ytt-toast")?.textContent })));
