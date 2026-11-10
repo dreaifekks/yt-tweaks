@@ -135,6 +135,8 @@ await popup.selectOption("#maxColumns", "8");
 await page.waitForTimeout(200);
 let s = await grid();
 check("a higher most from the popup: 8 per row at 2500 px, laid out and positioned again", s.perRow === 8 && s.layouts === after.layouts + 1 && s.positions === after.positions + 1, s);
+await popup.fill("#cardWidth", "40");
+check("a width still being typed, below the least, isn't taken", (await popup.evaluate(() => chrome.storage.local.get("cardWidth"))).cardWidth === undefined);
 await popup.fill("#cardWidth", "400");
 await popup.locator("#cardWidth").blur();
 await page.waitForTimeout(200);
@@ -180,6 +182,8 @@ await popup.check("#hideGames");
 // ---- videos taken off the home feed by title or channel name ---------------------------
 const gone = () => page.evaluate(() => [...document.querySelectorAll('ytd-browse[page-subtype="home"] .video')].filter((el) => getComputedStyle(el).display === "none").map((el) => el.id));
 await popup.fill("#blockWords", "title 3 OF\n\n/^Channel (7|8)$/\n/(/\n  channel 12  ");
+check("the words are stored as they're typed, so closing the popup right away loses nothing", (await popup.evaluate(() => chrome.storage.local.get("blockWords"))).blockWords.length === 4);
+check("and the feed waits for a pause in the typing", (await gone()).length === 0, await gone());
 await page.waitForTimeout(800);
 check("plain text in a title or name whatever the case, and regular expressions, take videos out; a broken one is passed over", (await gone()).join() === "v3,v7,v8,v12", await gone());
 await page.evaluate(() => {

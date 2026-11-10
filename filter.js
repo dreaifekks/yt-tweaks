@@ -4,9 +4,11 @@
 (() => {
   const ITEMS = 'ytd-browse[page-subtype="home"] ytd-rich-grid-renderer > #contents > ytd-rich-item-renderer';
   const GRID = 'ytd-browse[page-subtype="home"] ytd-rich-grid-renderer > #contents';
+  const TYPING_PAUSE = 500; // ms, so half a word doesn't empty the feed while it's typed
   const watched = new WeakSet();
   let tests = [];
   let queued = false;
+  let typing = 0;
 
   const compile = (words) =>
     words.flatMap((word) => {
@@ -52,7 +54,10 @@
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local" || !changes.blockWords) return;
-    tests = compile(changes.blockWords.newValue);
-    apply();
+    clearTimeout(typing);
+    typing = setTimeout(() => {
+      tests = compile(changes.blockWords.newValue);
+      apply();
+    }, TYPING_PAUSE);
   });
 })();

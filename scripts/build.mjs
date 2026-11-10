@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const FILES = ["manifest.json", "defaults.js", "settings.js", "filter.js", "grid.js", "speed.js", "content.css", "popup.html", "popup.css", "popup.js"];
+const FILES = ["LICENSE", "manifest.json", "defaults.js", "settings.js", "filter.js", "grid.js", "speed.js", "content.css", "popup.html", "popup.css", "popup.js"];
 const ICONS = [16, 32, 48, 128].map((size) => `icons/icon-${size}.png`);
 
 const out = join(root, "dist", "chrome");

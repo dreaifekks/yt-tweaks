@@ -49,3 +49,7 @@ npm run package   # and zips it into packages/
 | `popup.*` | The settings behind the toolbar icon |
 
 `grid.js` and `speed.js` run in the page's own world, because they call YouTube's code: the grid's `refreshGridLayout` and the player's `setPlaybackRate`. Both, and the element names in `content.css`, were checked against YouTube on 2026-11-11. When YouTube changes them, `npm run live` is the quickest way to see what broke.
+
+## License
+
+[MIT](LICENSE)
