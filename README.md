@@ -1,6 +1,6 @@
 # YT Tweaks
 
-A small Chrome extension that changes a few things on youtube.com.
+A small extension for Chrome and Safari that changes a few things on youtube.com.
 
 - **Videos per row follow the window width.** As many as fit with every card at least a width you choose (290 px to start with), up to a most you choose (5 to start with). The cards stretch to fill the row. This applies to the home page and the other pages laid out the same way, such as subscriptions and channel pages.
 - **Only videos among the videos.** The home feed and the list beside a video lose their Shorts, games (the "play while you watch" row included), mixes, playlists and albums, and the home feed loses the other shelves it puts between videos, such as breaking news. Each of the four groups has its own switch.
@@ -13,11 +13,15 @@ The extension reads and stores nothing but its own settings, and sends nothing a
 
 ## Install
 
-There's no store listing. Load it unpacked:
+There's no store listing.
+
+**Chrome.** Load it unpacked:
 
 1. Get the files: clone this repository, or download the zip from a release and unpack it.
 2. Open `chrome://extensions` and turn on **Developer mode**.
 3. Choose **Load unpacked** and pick the folder.
+
+**Safari 18 or later, on macOS 14 or later.** Download `yt-tweaks-<version>-safari.dmg` from a release. Drag YT Tweaks into Applications and open it once, then turn it on in Safari's Settings, under Extensions, and allow it on youtube.com.
 
 ## Notes
 
@@ -34,9 +38,12 @@ npm install
 npx playwright-core install chromium
 npm test          # against a fake youtube.com, no network
 npm run live      # against the real site, in a visible Chromium with its own profile
-npm run build     # copies the extension into dist/chrome
-npm run package   # and zips it into packages/
+npm run build     # copies the extension into dist/chrome and dist/safari
+npm run package   # and zips the Chrome one into packages/
+scripts/package-safari.sh packages/yt-tweaks-safari.dmg   # the Safari one as a macOS app in a dmg, needs Xcode
 ```
+
+Pushing a tag `v<version>`, matching `manifest.json`, builds the zip and the dmg and publishes them as a GitHub Release. Running the Release workflow by hand only builds, leaving them as artifacts. With the secrets `MACOS_SIGNING_P12`, `MACOS_SIGNING_PASSWORD`, `APPLE_API_KEY_P8_BASE64`, `APPLE_API_KEY_ID` and `APPLE_API_ISSUER_ID` the dmg is signed and notarized. Without them it is ad-hoc signed, and Safari only turns the extension on with "Allow Unsigned Extensions" checked.
 
 | File | What it does |
 |---|---|

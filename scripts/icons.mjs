@@ -12,7 +12,8 @@ const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
-for (const size of [16, 32, 48, 128]) {
+// 1024 is the macOS app's icon in the Safari build.
+for (const size of [16, 32, 48, 128, 1024]) {
   await page.setViewportSize({ width: size, height: size });
   await page.setContent(`<style>html,body{margin:0;background:transparent}svg{display:block;width:${size}px;height:${size}px}</style>${SVG}`);
   await page.screenshot({ path: join(root, "icons", `icon-${size}.png`), omitBackground: true });

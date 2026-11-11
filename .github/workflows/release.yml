@@ -1,8 +1,9 @@
 name: Release
 
 # Pushing a v<version> tag, such as v0.1.0, packages the extension and publishes a GitHub
-# Release. The tag has to match the version in manifest.json.
-# A manual run only packages: the zip is in that run's artifacts and nothing is published.
+# Release: a zip for Chrome and a dmg for Safari. The tag has to match the version in
+# manifest.json.
+# A manual run only packages: the files are in that run's artifacts and nothing is published.
 on:
   push:
     tags:
@@ -16,8 +17,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build
+  build-chrome:
+    name: Build Chrome
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -56,10 +57,66 @@ jobs:
           path: packages/*
           if-no-files-found: error
 
+  build-safari:
+    name: Build Safari
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      # Only whether signing is set up. The secrets go to the two steps that use them.
+      HAS_APPLE_SIGNING: ${{ secrets.MACOS_SIGNING_P12 != '' }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Build
+        run: npm run build
+
+      - name: Import signing certificate
+        if: env.HAS_APPLE_SIGNING == 'true'
+        env:
+          MACOS_SIGNING_P12: ${{ secrets.MACOS_SIGNING_P12 }}
+          MACOS_SIGNING_PASSWORD: ${{ secrets.MACOS_SIGNING_PASSWORD }}
+        run: |
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          keychain_password="$(uuidgen)"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          printf '%s' "$MACOS_SIGNING_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$keychain" -P "$MACOS_SIGNING_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/certificate.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+
+      - name: Warn about missing signing
+        if: env.HAS_APPLE_SIGNING != 'true'
+        run: echo "::warning::No Apple signing is set up, so the Safari dmg is only ad-hoc signed"
+
+      - name: Package dmg
+        env:
+          APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          label="${RELEASE_TAG#v}"
+          label="${label:-$(node -p "require('./manifest.json').version")}"
+          mkdir -p packages
+          scripts/package-safari.sh "packages/yt-tweaks-$label-safari.dmg"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: safari
+          path: packages/*
+          if-no-files-found: error
+
   publish:
     name: Publish release
     if: github.event_name == 'push' && github.ref_type == 'tag'
-    needs: [build]
+    needs: [build-chrome, build-safari]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -75,6 +132,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+        # A re-run replaces the files, so a later notarized build can land on the same tag.
         run: |
           if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" packages/* --clobber
